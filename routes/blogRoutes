@@ -1,0 +1,20 @@
+const express = require('express');
+const { authenticateJWT, isAdmin } = require('../middlewares/authMiddleware');
+const blogController = require('../controllers/blogController');
+
+const router = express.Router();
+
+router.get('/', blogController.getAllBlogs);
+router.get('/accepted', blogController.getAcceptedBlogs);
+
+router.get('/:id', blogController.getBlogById);
+
+router.post('/', authenticateJWT, blogController.createBlog);
+router.put('/:id', authenticateJWT, blogController.updateBlog);
+router.put('/approve/:id', authenticateJWT, isAdmin, blogController.approveBlog);
+router.get('/accepted', blogController.getAcceptedBlogs);
+
+router.delete('/:id', authenticateJWT, isAdmin, blogController.deleteBlog);
+
+
+module.exports = router;
