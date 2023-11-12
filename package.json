@@ -9,7 +9,7 @@
     "postinstall": "npm rebuild bcrypt --build-from-source"
   },
   "engines": {
-    "node": "16.14.2"
+    "node": "16.20.1"
   },
   "keywords": [],
   "author": "",
