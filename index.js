@@ -6,6 +6,9 @@ const blogRoutes = require('./routes/blogRoutes')
 const userRoutes = require('./routes/users');
 const commentRoutes = require('./routes/commentRoutes')
 const captureSessionDetails = require('./middlewares/captureUserDetails');
+const requestIp = require('request-ip');
+const useragent = require('useragent');
+const axios = require('axios');
 require('dotenv').config();
 
 // Check for required environment variables

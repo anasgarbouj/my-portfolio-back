@@ -1,5 +1,6 @@
 const SessionDetails = require('../models/UserDetails'); // Ensure this path matches where you've saved your model
-
+const requestIp = require('request-ip');
+const useragent = require('useragent');
 const captureSessionDetails = async (req, res, next) => {
     const ip = requestIp.getClientIp(req);
     const ua = useragent.parse(req.headers['user-agent']);
