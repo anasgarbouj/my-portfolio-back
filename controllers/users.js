@@ -1,72 +1,100 @@
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-
+const requestIp = require('request-ip');
+const useragent = require('useragent');
+const axios = require('axios');
 const generateToken = (user) => {
     return jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
       expiresIn: '1d', // specify the expiration time
     });
   };
-
+  const getLocationData = async (ip) => {
+    try {
+        const response = await axios.get(`https://ipinfo.io/${ip}/geo`);
+        return {
+            city: response.data.city,
+            region: response.data.region,
+            country: response.data.country
+        };
+    } catch (error) {
+        console.error('Failed to get location data', error);
+        return {};
+    }
+};
 // Sign up a new user
 exports.signup = async (req, res) => {
-    try {
-      const { name, email, password, role } = req.body;
-  
-      // Check if user already exists
-      const userExists = await User.findOne({ email });
-      if (userExists) {
-        return res.status(400).json({ message: 'Email already in use' });
-      }
-  
-      // Hash the password
-      const hashedPassword = await bcrypt.hash(password, 12);
-  
-      // Create a new user instance
-      const newUser = new User({
-        name,
-        email,
-        password: hashedPassword,
-        role: role || 'normal' // default to 'normal' if role is not provided
-      });
-  
-      // Save the new user
-      const user = await newUser.save();
-  
-      // Generate a token for the new user
-      const token = generateToken(user);
-  
-      res.status(201).json({ message: 'User created successfully!', token, user });
-    } catch (error) {
-      res.status(500).json({ error: error.message });
+  try {
+    const { name, email, password, role } = req.body;
+    const ip = requestIp.getClientIp(req);
+    const ua = useragent.parse(req.headers['user-agent']);
+
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+      return res.status(400).json({ message: 'Email already in use' });
     }
-  };
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+    const locationData = await getLocationData(ip);
+
+    const newUser = new User({
+      name,
+      email,
+      password: hashedPassword,
+      role: role || 'normal',
+      lastLoginDetails: {
+        ip,
+        device: ua.toString(),
+        location: {
+          city: locationData.city,
+          region: locationData.region,
+          country: locationData.country
+        }
+      }
+    });
+
+    const user = await newUser.save();
+    const token = generateToken(user);
+    res.status(201).json({ message: 'User created successfully!', token, user });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
   
-  // Sign in an existing user
-  exports.signin = async (req, res) => {
-    try {
+exports.signin = async (req, res) => {
+  try {
       const { email, password } = req.body;
-  
-      // Check if user exists
+      const ip = requestIp.getClientIp(req);
+      const ua = useragent.parse(req.headers['user-agent']);
+
       const user = await User.findOne({ email });
       if (!user) {
-        return res.status(401).json({ message: 'Invalid email or password' });
+          return res.status(401).json({ message: 'Invalid email or password' });
       }
-  
-      // Check if password is correct
+
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
-        return res.status(401).json({ message: 'Invalid email or password' });
+          return res.status(401).json({ message: 'Invalid email or password' });
       }
-  
-      // Generate a token
-      const token = generateToken(user);
-  
-      res.status(200).json({ message: 'User signed in successfully!', token, user });
-    } catch (error) {
+
+      const locationData = await getLocationData(ip);
+
+      // Update last login details
+      const updatedUser = await User.findByIdAndUpdate(user._id, {
+          lastLoginDetails: {
+              ip,
+              device: ua.toString(),
+              location: locationData
+          }
+      }, { new: true });
+
+      const token = generateToken(updatedUser);
+
+      res.status(200).json({ message: 'User signed in successfully!', token, user: updatedUser });
+  } catch (error) {
       res.status(500).json({ error: error.message });
-    }
-  };
+  }
+};
 // Get a single user by id
 exports.getUser = async (req, res) => {
     try {

@@ -19,6 +19,15 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['admin', 'normal'],
     default: 'user'
+  },
+  lastLoginDetails: {
+    ip: String,
+    device: String,
+    location: {
+      city: String,
+      region: String,
+      country: String
+    }
   }
 });
 

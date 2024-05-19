@@ -17,7 +17,7 @@ if (!process.env.JWT_SECRET) {
   process.exit(1);
 }
 
-app.use(cors()); // Use CORS middleware
+app.use(cors()); 
 app.use(express.json());
 app.use('/api/users', userRoutes); 
 app.use('/api/blog', blogRoutes);
@@ -38,5 +38,5 @@ app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`);
 });
 
-module.exports = app; // This is important
+module.exports = app; 
 
