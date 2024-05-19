@@ -4,6 +4,8 @@ const jwt = require('jsonwebtoken');
 const requestIp = require('request-ip');
 const useragent = require('useragent');
 const axios = require('axios');
+const SessionDetails = require('../models/UserDetails'); // Ensure you have the correct path to your model
+
 const generateToken = (user) => {
     return jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
       expiresIn: '1d', // specify the expiration time
@@ -22,6 +24,8 @@ const generateToken = (user) => {
         return {};
     }
 };
+
+
 // Sign up a new user
 exports.signup = async (req, res) => {
   try {

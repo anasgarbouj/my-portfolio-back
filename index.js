@@ -5,6 +5,7 @@ const cors = require('cors'); // Import CORS module
 const blogRoutes = require('./routes/blogRoutes')
 const userRoutes = require('./routes/users');
 const commentRoutes = require('./routes/commentRoutes')
+const captureSessionDetails = require('./middlewares/captureUserDetails');
 require('dotenv').config();
 
 // Check for required environment variables
@@ -19,6 +20,8 @@ if (!process.env.JWT_SECRET) {
 
 app.use(cors()); 
 app.use(express.json());
+app.use(captureSessionDetails);
+
 app.use('/api/users', userRoutes); 
 app.use('/api/blog', blogRoutes);
 app.use('/api/comments', commentRoutes);
